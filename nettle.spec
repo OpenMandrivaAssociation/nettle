@@ -100,7 +100,9 @@ sed s/ggdb3/g/ -i configure
 mkdir -p bfd
 ln -s %{_bindir}/ld.bfd bfd/ld
 export PATH=$PWD/bfd:$PATH
+%ifarch %{ix86} x86_64
 CFLAGS="%optflags -fno-integrated-as"
+%endif
 %configure \
 	--enable-static \
 	--disable-openssl \
