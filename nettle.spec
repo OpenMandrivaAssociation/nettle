@@ -3,6 +3,8 @@
 #% define debug_package %{nil}
 %define _disable_lto 1
 
+%global optflags %{optflags} -Ofast
+
 %bcond_with bootstrap
 
 %define major 6
@@ -15,7 +17,7 @@ Summary:	Nettle cryptographic library
 Name:		nettle
 Epoch:		1
 Version:	3.4
-Release:	1
+Release:	2
 License:	LGPLv2+
 Group:		System/Libraries
 Url:		http://www.lysator.liu.se/~nisse/nettle/
