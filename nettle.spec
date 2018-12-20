@@ -17,7 +17,7 @@ Summary:	Nettle cryptographic library
 Name:		nettle
 Epoch:		1
 Version:	3.4.1
-Release:	1
+Release:	0.1
 License:	LGPLv2+
 Group:		System/Libraries
 Url:		http://www.lysator.liu.se/~nisse/nettle/
@@ -93,7 +93,8 @@ compile programs using this library.
 #----------------------------------------------------------------------------
 
 %prep
-%autosetup -p1
+%setup -q
+%apply_patches
 # Disable -ggdb3 which makes debugedit unhappy
 sed s/ggdb3/g/ -i configure
 #sed 's/ecc-192.c//g' -i Makefile.in
@@ -109,16 +110,16 @@ CFLAGS="%optflags -fno-integrated-as"
 %configure \
 	--enable-static \
 	--disable-openssl \
-%ifarch %{x86_64}
+%ifarch x86_64
 	--enable-x86-aesni \
 %endif
 	--enable-shared
 
-%make_build
+%make
 
 %check
 %make check
 
 %install
-%make_install
+%makeinstall_std
 recode ISO-8859-1..UTF-8 ChangeLog
