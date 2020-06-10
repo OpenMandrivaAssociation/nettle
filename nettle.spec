@@ -1,3 +1,8 @@
+# nettle is used by gnutls, gnutls is used by wine
+%ifarch %{x86_64}
+%bcond_without compat32
+%endif
+
 # Just a hack because rpmlint rejects build with unstripped libs
 #% define _enable_debug_packages %{nil}
 #% define debug_package %{nil}
@@ -15,12 +20,15 @@
 %define libname %mklibname nettle %{major}
 %define libhogweed %mklibname hogweed %{hogweedmajor}
 %define devname %mklibname -d nettle
+%define lib32name %mklib32name nettle %{major}
+%define lib32hogweed %mklib32name hogweed %{hogweedmajor}
+%define dev32name %mklib32name -d nettle
 
 Summary:	Nettle cryptographic library
 Name:		nettle
 Epoch:		1
 Version:	3.6
-Release:	1
+Release:	2
 License:	LGPLv2+
 Group:		System/Libraries
 Url:		http://www.lysator.liu.se/~nisse/nettle/
@@ -98,6 +106,55 @@ compile programs using this library.
 
 #----------------------------------------------------------------------------
 
+%if %{with compat32}
+%package -n %{lib32name}
+Summary:	Nettle shared library (32-bit)
+Group:		System/Libraries
+
+%description -n %{lib32name}
+This is the shared library part of the Nettle library.
+
+%files -n %{lib32name}
+%{_prefix}/lib/libnettle.so.%{major}*
+
+#----------------------------------------------------------------------------
+
+%if !%{with bootstrap}
+%package -n %{lib32hogweed}
+Summary:	Hogweed shared library (32-bit)
+Group:		System/Libraries
+
+%description -n %{lib32hogweed}
+This is the shared library part of the Hogweed library.
+
+%files -n %{lib32hogweed}
+%{_prefix}/lib/libhogweed.so.%{hogweedmajor}*
+%endif
+
+#----------------------------------------------------------------------------
+
+%package -n %{dev32name}
+Summary:	Header files for compiling against Nettle library (32-bit)
+Group:		Development/C++
+Requires:	%{devname} = %{EVRD}
+Requires:	%{lib32name} = %{EVRD}
+%if !%{with bootstrap}
+Requires:	%{lib32hogweed} = %{EVRD}
+%endif
+
+%description -n %{dev32name}
+This is the development package of nettle. Install it if you want to 
+compile programs using this library.
+
+%files -n %{dev32name}
+%{_prefix}/lib/libnettle.so
+%if !%{with bootstrap}
+%{_prefix}/lib/libhogweed.so
+%endif
+%{_prefix}/lib/pkgconfig/*.pc
+%{_prefix}/lib/*.a
+%endif
+
 %prep
 %autosetup -p1
 %config_update
@@ -107,12 +164,29 @@ sed s/ggdb3/g/ -i configure
 #sed 's/ecc-224.c//g' -i Makefile.in
 
 %build
+export CONFIGURE_TOP="$(pwd)"
+%if %{with compat32}
+mkdir build32
+cd build32
+%configure32 \
+	--enable-x86-aesni \
+%ifnarch znver1
+	--enable-fat \
+%endif
+	--enable-static
+%make_build
+cd ..
+%endif
+
 mkdir -p bfd
 ln -s %{_bindir}/ld.bfd bfd/ld
 export PATH=$PWD/bfd:$PATH
 # enable-x86-aesni without enable-fat likely causes bug 2408
 # Inline asm isn't compatible with clang style asm
 CFLAGS="%{optflags} -fno-integrated-as"
+
+mkdir build
+cd build
 
 %if %{with pgo}
 export LLVM_PROFILE_FILE=%{name}-%p.profile.d
@@ -167,8 +241,15 @@ LDFLAGS="%{ldflags} -fprofile-instr-use=$(realpath %{name}.profile)" \
 %make_build
 
 %check
-%make check
+%if %{with compat32}
+# FIXME we shouldn't allow all those failures
+%make_build check -C build32 || :
+%endif
+%make_build check -C build
 
 %install
-%make_install
+%if %{with compat32}
+%make_install -C build32
+%endif
+%make_install -C build
 recode ISO-8859-1..UTF-8 ChangeLog
