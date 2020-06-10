@@ -42,6 +42,9 @@ BuildRequires:	pkgconfig(valgrind)
 %if %{with bootstrap}
 BuildRequires:	pkgconfig(openssl)
 %endif
+%if %{with compat32}
+BuildRequires:	devel(libgmp)
+%endif
 
 %description
 Nettle is a cryptographic library that is designed to fit easily in more or
