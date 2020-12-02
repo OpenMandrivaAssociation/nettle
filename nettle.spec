@@ -28,7 +28,7 @@ Summary:	Nettle cryptographic library
 Name:		nettle
 Epoch:		1
 Version:	3.6
-Release:	2
+Release:	3
 License:	LGPLv2+
 Group:		System/Libraries
 Url:		http://www.lysator.liu.se/~nisse/nettle/
@@ -171,8 +171,15 @@ export CONFIGURE_TOP="$(pwd)"
 %if %{with compat32}
 mkdir build32
 cd build32
+# FIXME Without --enable-mini-gmp, "make check" fails a number of tests,
+# but gmp itself seems to be working (make check in gmp succeeds flawlessly).
+# This may need further analysis; until we've figured out the right thing
+# to do, --enable-mini-gmp is an ok workaround.
+# This should be checked again with every gmp and/or nettle update.
+# In 64-bit configurations, not using mini-gmp works fine.
 %configure32 \
 	--enable-x86-aesni \
+	--enable-mini-gmp \
 %ifnarch znver1
 	--enable-fat \
 %endif
@@ -245,8 +252,7 @@ LDFLAGS="%{ldflags} -fprofile-instr-use=$(realpath %{name}.profile)" \
 
 %check
 %if %{with compat32}
-# FIXME we shouldn't allow all those failures
-%make_build check -C build32 || :
+%make_build check -C build32
 %endif
 %make_build check -C build
 
