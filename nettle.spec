@@ -27,7 +27,7 @@
 Summary:	Nettle cryptographic library
 Name:		nettle
 Epoch:		1
-Version:	3.7
+Version:	3.7.1
 Release:	1
 License:	LGPLv2+
 Group:		System/Libraries
