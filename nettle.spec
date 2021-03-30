@@ -6,7 +6,6 @@
 # Just a hack because rpmlint rejects build with unstripped libs
 #% define _enable_debug_packages %{nil}
 #% define debug_package %{nil}
-%define _disable_lto 1
 
 %global optflags %{optflags} -O3
 
@@ -27,7 +26,7 @@
 Summary:	Nettle cryptographic library
 Name:		nettle
 Epoch:		1
-Version:	3.7
+Version:	3.7.1
 Release:	1
 License:	LGPLv2+
 Group:		System/Libraries
