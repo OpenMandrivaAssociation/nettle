@@ -3,10 +3,6 @@
 %bcond_without compat32
 %endif
 
-# Just a hack because rpmlint rejects build with unstripped libs
-#% define _enable_debug_packages %{nil}
-#% define debug_package %{nil}
-
 %global optflags %{optflags} -O3
 
 %bcond_with bootstrap
@@ -27,7 +23,7 @@ Summary:	Nettle cryptographic library
 Name:		nettle
 Epoch:		1
 Version:	3.7.3
-Release:	1
+Release:	2
 License:	LGPLv2+
 Group:		System/Libraries
 Url:		http://www.lysator.liu.se/~nisse/nettle/
@@ -104,7 +100,7 @@ compile programs using this library.
 %{_libdir}/*.a
 %{_libdir}/pkgconfig/*.pc
 %{_includedir}/nettle/
-%{_infodir}/nettle.*
+%doc %{_infodir}/nettle.*
 
 #----------------------------------------------------------------------------
 
@@ -198,13 +194,19 @@ mkdir build
 cd build
 
 %if %{with pgo}
-export LLVM_PROFILE_FILE=%{name}-%p.profile.d
+# LLVM Profile Warning: Unable to track new values:
+# Running out of static counters.
+# Consider using option -mllvm -vp-counters-per-site=<n> to allocate more value profile counters at compile time.
+%global __cc %{__cc} -mllvm -vp-counters-per-site=4
+%global __cxx %{__cxx} -mllvm -vp-counters-per-site=4
+
 export LD_LIBRARY_PATH="$(pwd)"
-CFLAGS="%{optflags} -fprofile-instr-generate" \
-CXXFLAGS="%{optflags} -fprofile-instr-generate" \
-FFLAGS="$CFLAGS_PGO" \
-FCFLAGS="$CFLAGS_PGO" \
-LDFLAGS="%{ldflags} -fprofile-instr-generate" \
+
+CFLAGS="%{optflags} -fprofile-generate" \
+CXXFLAGS="%{optflags} -fprofile-generate" \
+FFLAGS="$CFLAGS" \
+FCFLAGS="$CFLAGS" \
+LDFLAGS="%{build_ldflags} -fprofile-generate" \
 %configure \
 	--enable-static \
 	--disable-openssl \
@@ -223,14 +225,15 @@ LDFLAGS="%{ldflags} -fprofile-instr-generate" \
 make check
 
 unset LD_LIBRARY_PATH
-unset LLVM_PROFILE_FILE
-llvm-profdata merge --output=%{name}.profile *.profile.d
+llvm-profdata merge --output=%{name}-llvm.profdata $(find . -name "*.profraw" -type f)
+PROFDATA="$(realpath %{name}-llvm.profdata)"
+rm -f *.profraw
 
 make clean
 
-CFLAGS="%{optflags} -fprofile-instr-use=$(realpath %{name}.profile)" \
-CXXFLAGS="%{optflags} -fprofile-instr-use=$(realpath %{name}.profile)" \
-LDFLAGS="%{ldflags} -fprofile-instr-use=$(realpath %{name}.profile)" \
+CFLAGS="%{optflags} -fprofile-use=$PROFDATA" \
+CXXFLAGS="%{optflags} -fprofile-use=$PROFDATA" \
+LDFLAGS="%{build_ldflags} -fprofile-use=$PROFDATA" \
 %endif
 %configure \
 	--enable-static \
