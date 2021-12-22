@@ -194,18 +194,10 @@ mkdir build
 cd build
 
 %if %{with pgo}
-# LLVM Profile Warning: Unable to track new values:
-# Running out of static counters.
-# Consider using option -mllvm -vp-counters-per-site=<n> to allocate more value profile counters at compile time.
-%global __cc %{__cc} -mllvm -vp-counters-per-site=4
-%global __cxx %{__cxx} -mllvm -vp-counters-per-site=4
-
 export LD_LIBRARY_PATH="$(pwd)"
 
-CFLAGS="%{optflags} -fprofile-generate" \
+CFLAGS="%{optflags} -fprofile-generate -mllvm -vp-counters-per-site=8" \
 CXXFLAGS="%{optflags} -fprofile-generate" \
-FFLAGS="$CFLAGS" \
-FCFLAGS="$CFLAGS" \
 LDFLAGS="%{build_ldflags} -fprofile-generate" \
 %configure \
 	--enable-static \
@@ -222,7 +214,7 @@ LDFLAGS="%{build_ldflags} -fprofile-generate" \
 	--enable-shared
 
 %make_build
-make check
+make check ||:
 
 unset LD_LIBRARY_PATH
 llvm-profdata merge --output=%{name}-llvm.profdata $(find . -name "*.profraw" -type f)
