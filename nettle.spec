@@ -186,9 +186,8 @@ cd ..
 mkdir -p bfd
 ln -s %{_bindir}/ld.bfd bfd/ld
 export PATH=$PWD/bfd:$PATH
+
 # enable-x86-aesni without enable-fat likely causes bug 2408
-# Inline asm isn't compatible with clang style asm
-CFLAGS="%{optflags} -fno-integrated-as"
 
 mkdir build
 cd build
@@ -244,11 +243,13 @@ LDFLAGS="%{build_ldflags} -fprofile-use=$PROFDATA" \
 
 %make_build
 
+%if ! %{cross_compiling}
 %check
 %if %{with compat32}
 %make_build check -C build32
 %endif
 %make_build check -C build
+%endif
 
 %install
 %if %{with compat32}
