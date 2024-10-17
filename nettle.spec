@@ -26,7 +26,7 @@ Version:	3.10
 Release:	1
 License:	LGPLv2+
 Group:		System/Libraries
-Url:		http://www.lysator.liu.se/~nisse/nettle/
+Url:		https://www.lysator.liu.se/~nisse/nettle/
 Source0:	https://ftp.gnu.org/gnu/nettle/%{name}-%{version}.tar.gz
 BuildRequires:	recode
 BuildRequires:	gmp-devel
