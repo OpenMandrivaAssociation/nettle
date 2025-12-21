@@ -28,6 +28,11 @@ License:	LGPLv2+
 Group:		System/Libraries
 Url:		https://www.lysator.liu.se/~nisse/nettle/
 Source0:	https://ftp.gnu.org/gnu/nettle/%{name}-%{version}.tar.gz
+BuildRequires:	autoconf
+BuildRequires:	automake
+BuildRequires:	libtool-base
+BuildRequires:	slibtool
+BuildRequires:	make
 BuildRequires:	recode
 BuildRequires:	gmp-devel
 BuildRequires:	texinfo
